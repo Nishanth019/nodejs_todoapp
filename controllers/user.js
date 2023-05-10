@@ -7,16 +7,27 @@ export const login = async(req,res) => {
     try {
         const {email,password} = req.body;
     const user = await User.findOne({email}).select("+password");
+ 
     if(!user){
-        return next(new ErrorHandler("Invalid Email or Password"),400)
+        return res.status(400).json({
+            success:false,
+            message:"Invalid Email or Password"
+        })
     }
     const isMatch = await bcrypt.compare(password,user.password)
     if(!isMatch){
-        return next(new ErrorHandler("Invalid Email or Password"),404)
+        return res.status(400).json({
+            success:false,
+            message:"Invalid Email or Password"
+        })
     }
     sendCookie(user,res,`Welcome back, ${user.name}`, 200)
     } catch (error) {
-        next(error)
+        console.log(error)
+        return res.status(500).json({
+            success:false,
+            message:"Internal Server error"
+        })
     }
 }
 
@@ -24,14 +35,25 @@ export const register = async(req,res) => {
     try {
         const {name,email,password} = req.body;
     let user = await User.findOne({email});
+    
     if(user) { 
-        return next(new ErrorHandler("User Already Exists",404))
+      
+        return res.status(400).json({
+            success:false,
+            message:"User already exists"
+        })
+        
     }
+   
     const hashedPassword = await bcrypt.hash(password,10)
     user = await User.create({name,email,password:hashedPassword})
     sendCookie(user,res,"Registered Successfully",201)
     } catch (error) {
-        next(error)
+        console.log(error)
+        return res.status(500).json({
+            success:false,
+            message:"Internal Server error"
+        })
     }
 }
 
@@ -43,7 +65,11 @@ export const getMyProfile = (req,res) => {
             user:req.user
      })
     } catch (error) {
-        next(error)
+        console.log(error)
+        return res.status(500).json({
+            success:false,
+            message:"Internal Server error"
+        })
     }
 }
 
@@ -59,8 +85,11 @@ export const logout = (req,res) => {
             message:"logout successfull",
          })
      } catch (error) {
-        next(error);
+        console.log(error)
+        return res.status(500).json({
+            success:false,
+            message:"Internal Server error"
+        })
      }
 }
-
 
